@@ -3,4 +3,4 @@ project(ps_utils)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_library(ps_utils library.cpp math/fft.h math/modulo.h)
+add_library(ps_utils library.cpp math/fft.h math/modulo.h math/sieve.h)
