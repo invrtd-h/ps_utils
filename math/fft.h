@@ -6,25 +6,20 @@
 using cd = std::complex<double>;
 double pi = std::numbers::pi;
 
-std::vector<cd> fft(const std::vector<cd> &a, int pol = 1) {
-    int n = 1;
-    const int a_sz = static_cast<int>(a.size());
-    while (n < a_sz) {
-        n <<= 1;
-    }
-    std::vector<cd> r(n);
-    for (int i = 0; i < n; ++i) {
+std::vector<cd> fft(int n, std::vector<cd> &&a, int pol = 1) {
+    std::vector<cd> r(n, 0);
+    for (int i = 0; i < a.size(); ++i) {
         int s = 0;
         for (int b = 1, d = n / 2; b < n; b <<= 1, d >>= 1) {
             if (b & i) {
                 s += d;
             }
         }
-        r[s] = i < a_sz ? a[i] : 0;
+        r[s] = a[i];
     }
     
     for (int mte = 2; mte <= n; mte <<= 1) {
-        cd we = std::exp(cd(0, pol * 2 * pi / mte));
+        const cd we = std::exp(cd(0, pol * 2 * pi / mte));
         for (int i = 0; i < n; i += mte) {
             cd w = 1;
             for (int j = i; j < i + mte / 2; ++j, w *= we) {
@@ -45,26 +40,17 @@ std::vector<cd> fft(const std::vector<cd> &a, int pol = 1) {
     return r;
 }
 
-std::vector<cd> mul(std::vector<cd> a, std::vector<cd> b) {
-    const int target_size = static_cast<int>(a.size() + b.size() - 1);
-    a.reserve(target_size);
-    b.reserve(target_size);
+auto mul(std::vector<cd> a, std::vector<cd> b) {
+    const int n =
+        1 << std::bit_width(static_cast<unsigned int>(a.size() + b.size() - 1));
     
-    while (a.size() < target_size) {
-        a.emplace_back(0);
-    }
-    while (b.size() < target_size) {
-        b.emplace_back(0);
+    auto ta = fft(n, std::move(a)), tb = fft(n, std::move(b));
+    
+    for (int i = 0; i < n; ++i) {
+        ta[i] *= tb[i];
     }
     
-    auto ta = fft(a), tb = fft(b);
-    
-    std::vector<cd> ret(ta.size());
-    for (int i = 0; i < ret.size(); ++i) {
-        ret[i] = ta[i] * tb[i];
-    }
-    
-    return fft(ret, -1);
+    return fft(n, std::move(ta), -1);
 }
 
-#endif //PS_UTILS_FFT_H
+#endif

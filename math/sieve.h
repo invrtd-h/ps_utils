@@ -26,4 +26,20 @@ std::vector<int> prime_sieve(int ubd) {
     return ret;
 }
 
+std::vector<char> prime_raw_sieve(int ubd) {
+    std::vector<char> sieve(ubd, 1);
+    sieve[0] = sieve[1] = sieve[4] = 0;
+    
+    for (int i = 2; i * i < ubd; ++i) {
+        if (not sieve[i]) {
+            continue;
+        }
+        for (int j = i * i; j < ubd; j += i) {
+            sieve[j] = 0;
+        }
+    }
+    
+    return sieve;
+}
+
 #endif //PS_UTILS_SIEVE_H
