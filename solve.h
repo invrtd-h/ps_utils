@@ -8,7 +8,7 @@ void solve() {
 
 }
 
-#ifndef LOCAL
+#ifdef ONLINE_JUDGE
 int main() {
     std::cin.tie(nullptr)->sync_with_stdio(false);
     solve();
