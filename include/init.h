@@ -1,5 +1,5 @@
-#ifndef PS_UTILS___INIT___H
-#define PS_UTILS___INIT___H
+#ifndef PS_UTILS_INIT_H
+#define PS_UTILS_INIT_H
 
 #include "ugly_print.h"
 

@@ -2,8 +2,9 @@
 #include "include/init.h"
 using ugly::dout;
 using ugly::fmt;
+
 #include <bits/stdc++.h>
-#include "solve.cpp"
+#include "solve.h"
 
 #ifdef LOCAL
 
