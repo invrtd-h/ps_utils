@@ -1,4 +1,3 @@
-#define LOCAL
 #include "include/init.h"
 using ugly::dout;
 using ugly::fmt;
@@ -6,7 +5,8 @@ using ugly::fmt;
 #include <bits/stdc++.h>
 #include "solve.h"
 
-#ifdef LOCAL
+#ifndef ONLINE_JUDGE
+#ifndef FUNC_IMPL
 
 namespace chr = std::chrono;
 using hrc = chr::high_resolution_clock;
@@ -34,4 +34,5 @@ int main() {
     }
 }
 
+#endif
 #endif

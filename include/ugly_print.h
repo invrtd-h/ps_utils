@@ -465,33 +465,36 @@ namespace ugly::detail {
 }
 
 namespace ugly::detail {
+    [[maybe_unused]]
+    inline decltype(auto) drop(const auto& t) {
+        std::cout << to_str(t);
+        return t;
+    }
+}
+
+namespace ugly::detail {
     class Printer {
     
     public:
         Printer& operator<<(const auto& t) {
-            std::cout << ugly::detail::fmt("debug!/{}/", t);
-            std::cout << std::endl;
+            std::cout << ugly::detail::fmt("debug!/{}/", t) << std::endl;
             return *this;
         }
         
         template<typename... T>
         [[maybe_unused]]
         Printer& fmtln(const std::string& s_fmt, const T&... t) {
-            std::cout << ugly::detail::fmt(s_fmt, t...);
-            std::cout << std::endl;
+            std::cout << ugly::detail::fmt(s_fmt, t...) << std::endl;
             return *this;
+        }
+        
+        decltype(auto) operator*(const auto& t) {
+            std::cout << ugly::detail::to_str(t) << std::endl;
+            return t;
         }
     };
     
     Printer dout;
-}
-
-namespace ugly::detail {
-    [[maybe_unused]]
-    inline decltype(auto) drop(const auto& t) {
-        std::cout << to_str(t);
-        return t;
-    }
 }
 
 namespace ugly {
