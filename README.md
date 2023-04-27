@@ -5,6 +5,7 @@ Consists of
 * debugging code
   * A print function that can prints almost everything
   * fmt print function
+  * pipeline operator
   * ~~FP library~~ (to be added)
 * data structures template code
   * disjoint set, segment tree, etc

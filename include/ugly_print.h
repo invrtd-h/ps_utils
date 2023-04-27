@@ -8,6 +8,7 @@
 #include <stack>
 #include <utility>
 #include <regex>
+#include <typeinfo>
 
 /**
  * str_cat function implementation.\n
@@ -17,6 +18,16 @@
  * and it was slow.)
  */
 namespace ugly::detail {
+    
+    /**
+     * A template guide for tracking template deductions.\n\n
+     * How to use:
+     * Since this class is not defined,
+     *
+     */
+    template<typename>
+    class [[maybe_unused]] TD;
+    
     
     [[maybe_unused]]
     inline std::size_t str_len(const std::string& str) noexcept {
@@ -129,12 +140,22 @@ namespace ugly::detail {
         std::cout << t;
     };
     
+    /**
+     * A container concept.\n
+     * If t.begin() and t.end() is legal expression,
+     * then t is a container.
+     * @tparam T tparam
+     */
     template<typename T>
     concept container = requires (T t) {
         t.begin();
         t.end();
     };
     
+    /**
+     * A concept for naive arrays.
+     * @tparam T tparam
+     */
     template<typename T>
     concept array = std::is_array_v<T>;
     
@@ -147,6 +168,8 @@ namespace ugly::detail {
     concept unpackable = requires {
         T::mem_num;
     };
+    
+    
 }
 
 /**
@@ -161,14 +184,20 @@ namespace ugly::detail {
     }
     
     auto to_str_container(const container auto& t) -> std::string {
+        using InsideType = std::decay_t<decltype(*t.begin())>;
+        constexpr bool double_container = container<InsideType>;
+        constexpr const char* delim = double_container ? ",\n" : ", ";
+        
         if (t.begin() == t.end()) {
             return "[]";
         }
         
         auto ret = std::string("[");
-        for (auto it = t.begin(); it != t.end(); ++it) {
-            ret.append(to_str(*it));
-            ret.append(", ");
+        
+        int idx = 0;
+        for (auto it = t.begin(); it != t.end(); ++it, ++idx) {
+            auto cat = str_cat(to_str(*it), delim);
+            ret.append(std::move(cat));
         }
         ret.pop_back();
         ret.back() = ']';
@@ -187,8 +216,8 @@ namespace ugly::detail {
         auto ret = std::string("[");
         
         for (int i = 0; i < SIZE; ++i) {
-            ret.append(to_str(t[i]));
-            ret.append(", ");
+            auto cat = str_cat(std::to_string(i), ": ", to_str(t[i]), ", ");
+            ret.append(std::move(cat));
         }
         ret.pop_back();
         ret.back() = ']';
@@ -355,7 +384,7 @@ namespace ugly::detail {
     }
     
     auto to_str_rule_undefined(const auto& t) -> std::string {
-        return str_cat("<unknown object at ", to_str(&t), ">");
+        return str_cat("<obj ", typeid(t).name(), " @", to_str(&t), ">");
     }
     
     template<typename T>
@@ -385,7 +414,7 @@ namespace ugly::detail {
     }
     
     template<typename T>
-    auto to_str(const std::stack<T>& t) -> std::string {
+    auto to_str(std::stack<T> t) -> std::string {
         if (t.empty()) {
             return "[]";
         }
@@ -406,7 +435,7 @@ namespace ugly::detail {
     }
     
     template<typename T>
-    auto to_str(const std::queue<T>& t) -> std::string {
+    auto to_str(std::queue<T> t) -> std::string {
         if (t.empty()) {
             return "[]";
         }
@@ -477,7 +506,7 @@ namespace ugly::detail {
     
     public:
         Printer& operator<<(const auto& t) {
-            std::cout << ugly::detail::fmt("debug!/{}/", t) << std::endl;
+            std::cout << ugly::detail::fmt("/{}/", t) << std::endl;
             return *this;
         }
         
@@ -487,8 +516,20 @@ namespace ugly::detail {
             std::cout << ugly::detail::fmt(s_fmt, t...) << std::endl;
             return *this;
         }
+    
+        template<typename T>
+        [[maybe_unused]]
+        Printer& ln(const T& t) {
+            std::cout << to_str(t) << std::endl;
+            return *this;
+        }
         
         decltype(auto) operator*(const auto& t) {
+            std::cout << ugly::detail::to_str(t) << std::endl;
+            return t;
+        }
+    
+        decltype(auto) drop(const auto& t) {
             std::cout << ugly::detail::to_str(t) << std::endl;
             return t;
         }

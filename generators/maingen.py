@@ -3,9 +3,16 @@ import random as r
 from tcgen import random_fmt
 from treegen import tree_gen, path_gen, star_gen
 
+
+def main_print():
+    n = 100
+    print(n, 2)
+    for i in range(n):
+        print(r.randint(-100, 100), r.randint(-100, 100), r.randint(-100, 100))
+
+
 if __name__ == '__main__':
-    n = 50000
-    t = 1
+    test_case_num = 1
 
     f = open("../input.txt", "r")
     s = f.read()
@@ -15,9 +22,9 @@ if __name__ == '__main__':
 
     sys.stdout = open("../input.txt", "w")
     print(s[0], end='')
+    if not s[0].endswith('\n'):
+        print("")
 
-    for i in range(t):
+    for i in range(test_case_num):
         print('#')
-        print(n)
-        print(*(r.randint(1, n * 2) for _ in range(n)))
-        tree_gen(n)
+        main_print()

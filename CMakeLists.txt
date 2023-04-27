@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_executable(ps_utils main.cpp)
 
-add_compile_options(-Wall -lm -static -DONLINE_JUDGE -DBOJ)
+add_compile_options(-Wall -lm -static)
