@@ -14,13 +14,13 @@ def main_print():
 if __name__ == '__main__':
     test_case_num = 1
 
-    f = open("../input.txt", "r")
+    f = open("../src/input.txt", "r")
     s = f.read()
     f.close()
 
     s = s.split('#')
 
-    sys.stdout = open("../input.txt", "w")
+    sys.stdout = open("../src/input.txt", "w")
     print(s[0], end='')
     if not s[0].endswith('\n'):
         print("")

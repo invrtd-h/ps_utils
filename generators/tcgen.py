@@ -20,7 +20,7 @@ n = 30000
 t = 10000000
 
 if __name__ == '__main__':
-    sys.stdout = open("../output.txt", "w")
+    sys.stdout = open("../src/output.txt", "w")
     print(n, t)
     for i in range(n):
         print(round(t * m.cos(i * 2 * m.pi / n)),

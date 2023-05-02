@@ -1,4 +1,4 @@
 # 프로젝트 제외 경로
 /cmake-build-debug/
-solve.h
-input.txt
+src/solve.h
+src/input.txt

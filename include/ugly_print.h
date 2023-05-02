@@ -46,13 +46,23 @@ namespace ugly::detail {
     static_assert(str_len("what") == 4);
     
     template<std::convertible_to<std::string>... T>
-    [[maybe_unused]]
     inline std::string str_cat(const T&... strs) {
         std::size_t size = (str_len(std::string(strs)) + ...);
         std::string ret;
         ret.reserve(size);
         
         (ret.append(strs), ...);
+        
+        return ret;
+    }
+    
+    constexpr inline auto str_repetition(const std::string& s, std::size_t time) -> std::string {
+        std::string ret;
+        ret.reserve(s.size() * time);
+        
+        for (std::size_t i = 0; i < time; ++i) {
+            ret += s;
+        }
         
         return ret;
     }
@@ -71,18 +81,19 @@ namespace ugly::detail {
 }
 
 /**
- * definitions for some basic rules.
+ * Definitions for some basic rules.
+ * If there is any basic rule for printing,
+ * the rule precedes any other rules.
  */
 namespace ugly::detail {
     template<typename U1, typename U2>
-    [[maybe_unused]]
     auto to_str_basic(const std::pair<U1, U2>& t) -> std::string {
         return str_cat("<", to_str(t.first), ", ", to_str(t.second), ">");
     }
     
     template<typename T>
     [[maybe_unused]]
-    auto to_str_basic(const std::stack<T>& t) -> std::string {
+    auto to_str_basic(std::stack<T> t) -> std::string {
         if (t.empty()) {
             return "[]";
         }
@@ -104,7 +115,7 @@ namespace ugly::detail {
     
     template<typename T>
     [[maybe_unused]]
-    auto to_str_basic(const std::queue<T>& t) -> std::string {
+    auto to_str_basic(std::queue<T> t) -> std::string {
         if (t.empty()) {
             return "[]";
         }
@@ -168,8 +179,27 @@ namespace ugly::detail {
     concept unpackable = requires {
         T::mem_num;
     };
+}
+
+namespace ugly::detail {
+    template<container T>
+    struct container_dim {
+        using value_type = std::decay_t<decltype(*std::declval<T>().begin())>;
+        
+        consteval static int calc_value() {
+            if constexpr (container<value_type>) {
+                return container_dim<value_type>::calc_value() + 1;
+            } else {
+                return 1;
+            }
+        }
+    };
     
+    template<container T>
+    constexpr int container_dim_v = container_dim<T>::calc_value();
     
+    static_assert(container_dim_v<std::vector<int>> == 1);
+    static_assert(container_dim_v<std::vector<std::vector<int>>> == 2);
 }
 
 /**
@@ -183,26 +213,56 @@ namespace ugly::detail {
         return ss.str();
     }
     
-    auto to_str_container(const container auto& t) -> std::string {
-        using InsideType = std::decay_t<decltype(*t.begin())>;
-        constexpr bool double_container = container<InsideType>;
-        constexpr const char* delim = double_container ? ",\n" : ", ";
+    auto to_str_container(const container auto& t,
+                          int dim = container_dim_v<std::decay_t<decltype(t)>>) -> std::string
+    {
+        constexpr auto to_str_container_1d = [](const container auto& t) {
+            static_assert(!container<decltype(*t.begin())>);
+            
+            if (t.begin() == t.end()) {
+                return std::string("[]");
+            }
+            
+            auto ret = std::string("[");
+            
+            int idx = 0;
+            for (auto it = t.begin(); it != t.end(); ++it, ++idx) {
+                auto cat = str_cat(to_str(*it), ", ");
+                ret.append(std::move(cat));
+            }
+            ret.pop_back();
+            ret.back() = ']';
+            
+            return ret;
+        };
         
-        if (t.begin() == t.end()) {
-            return "[]";
+        auto to_str_container_md = [dim](const container auto& t_) {
+            constexpr int dim_target = container_dim_v<std::decay_t<decltype(*t_.begin())>>;
+            if (t_.begin() == t_.end()) {
+                return std::string("[]");
+            }
+            
+            auto ret = std::string("[\n");
+            
+            int idx = 0;
+            for (auto it = t_.begin(); it != t_.end(); ++it, ++idx) {
+                auto cat = str_cat(str_repetition("    ", dim - dim_target), to_str_container(*it, dim), ",\n");
+                ret.append(std::move(cat));
+            }
+            ret.pop_back();
+            ret.pop_back();
+            ret.append("\n");
+            ret.append(str_repetition("    ", dim - dim_target - 1));
+            ret.append("]");
+            
+            return ret;
+        };
+        
+        if constexpr (!container<decltype(*t.begin())>) {
+            return to_str_container_1d(t);
+        } else {
+            return to_str_container_md(t);
         }
-        
-        auto ret = std::string("[");
-        
-        int idx = 0;
-        for (auto it = t.begin(); it != t.end(); ++it, ++idx) {
-            auto cat = str_cat(to_str(*it), delim);
-            ret.append(std::move(cat));
-        }
-        ret.pop_back();
-        ret.back() = ']';
-        
-        return ret;
     }
     
     template<array T>
@@ -407,53 +467,6 @@ namespace ugly::detail {
             return to_str_rule_undefined(t);
         }
     }
-    
-    template<typename U1, typename U2>
-    auto to_str(const std::pair<U1, U2>& t) -> std::string {
-        return str_cat("<", to_str(t.first), ", ", to_str(t.second), ">");
-    }
-    
-    template<typename T>
-    auto to_str(std::stack<T> t) -> std::string {
-        if (t.empty()) {
-            return "[]";
-        }
-        
-        std::string ret("[");
-        
-        while (!t.empty()) {
-            ret += to_str(t.top());
-            ret += " > ";
-            t.pop();
-        }
-        
-        ret.pop_back();
-        ret.pop_back();
-        ret.back() = ']';
-        
-        return ret;
-    }
-    
-    template<typename T>
-    auto to_str(std::queue<T> t) -> std::string {
-        if (t.empty()) {
-            return "[]";
-        }
-        
-        std::string ret("[");
-        
-        while (!t.empty()) {
-            ret += to_str(t.front());
-            ret += " > ";
-            t.pop();
-        }
-        
-        ret.pop_back();
-        ret.pop_back();
-        ret.back() = ']';
-        
-        return ret;
-    }
 }
 
 namespace ugly::detail {
@@ -505,6 +518,7 @@ namespace ugly::detail {
     class Printer {
     
     public:
+        [[maybe_unused]]
         Printer& operator<<(const auto& t) {
             std::cout << ugly::detail::fmt("/{}/", t) << std::endl;
             return *this;
@@ -516,7 +530,7 @@ namespace ugly::detail {
             std::cout << ugly::detail::fmt(s_fmt, t...) << std::endl;
             return *this;
         }
-    
+        
         template<typename T>
         [[maybe_unused]]
         Printer& ln(const T& t) {
@@ -524,12 +538,14 @@ namespace ugly::detail {
             return *this;
         }
         
-        decltype(auto) operator*(const auto& t) {
+        [[maybe_unused]]
+        decltype(auto) operator*(auto&& t) {
             std::cout << ugly::detail::to_str(t) << std::endl;
             return t;
         }
-    
-        decltype(auto) drop(const auto& t) {
+        
+        [[maybe_unused]]
+        decltype(auto) drop(auto&& t) {
             std::cout << ugly::detail::to_str(t) << std::endl;
             return t;
         }
@@ -538,13 +554,14 @@ namespace ugly::detail {
     Printer dout;
 }
 
+/**
+ * Final export
+ */
 namespace ugly {
     using detail::to_str;
     using detail::fmt;
     using detail::dout;
     using detail::drop;
 }
-
-using ugly::dout;
 
 #endif
