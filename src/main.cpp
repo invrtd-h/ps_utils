@@ -2,7 +2,9 @@
 using ugly::dout;
 using ugly::fmt;
 
+#define main main_wrapper
 #include "solve.h"
+#undef main
 
 #ifndef ONLINE_JUDGE
 #ifndef FUNC_IMPL
@@ -13,8 +15,11 @@ using hrc = chr::high_resolution_clock;
 int main() {
     std::string read_mode;
     
-    for (int i = 0; i < (1 << 30); ++i) {
+    for (int i = 0; i < (1 << 20); ++i) {
         if (!(std::cin >> read_mode)) {
+            break;
+        }
+        if (std::isdigit(read_mode[0]) || std::isalpha(read_mode[0])) {
             break;
         }
         auto start = hrc::now();

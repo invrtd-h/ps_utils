@@ -3,59 +3,64 @@
 
 #include <bits/stdc++.h>
 
-int bit_width(int x) {
-    int ret = 0;
-    for (; x; x /= 2) {
-        ++ret;
-    }
-    return ret;
-}
+template<typename F, typename T>
+concept BinaryOp = requires (F f, T t1, T t2) {
+    {f(t1, t2)} -> std::convertible_to<T>;
+};
 
-template<typename T, typename F, T DEFAULT>
-struct ST {
+template<typename T, BinaryOp<T> F = std::plus<T>, T identity = T()>
+struct SegTree {
     std::vector<T> data;
+    constexpr static int mem_num = 1;
     
-    explicit ST(const std::vector<T> &init) noexcept
-            : data(1 << (bit_width(init.size()) + 1))
-    {
-        const int sz = (int) data.size();
-        for (int i = sz / 2; i < sz / 2 + init.size(); ++i) {
-            data[i] = init[i - sz / 2];
-        }
-        for (int i = sz / 2 + init.size(); i < sz; ++i) {
-            data[i] = DEFAULT;
-        }
-        for (int i = sz / 2 - 1; i > 0; --i) {
-            data[i] = F()(data[2 * i], data[2 * i + 1]);
-        }
+    SegTree() = default;
+    
+    explicit SegTree(std::size_t size) noexcept {
+        std::size_t n = 1 << std::bit_width(size);
+        data = std::vector(n * 2, identity);
     }
     
-    void update(int idx, const T &val) noexcept {
-        idx += data.size() / 2;
-        data[idx] = val;
+    [[maybe_unused]]
+    static auto from(const std::vector<T>& v) -> SegTree {
+        auto ret = SegTree();
+        std::size_t n = 1 << std::bit_width(v.size());
+        ret.data.resize(n * 2);
         
+        for (std::size_t i = 0; i < v.size(); ++i) {
+            ret.data[n + i] = v[i];
+        }
+        for (std::size_t i = v.size() + n; i < ret.data.size(); ++i) {
+            ret.data[i] = identity;
+        }
+        for (std::size_t i = n - 1; i > 0; --i) {
+            ret.data[i] = F()(ret.data[2 * i], ret.data[2 * i + 1]);
+        }
+        
+        return ret;
+    }
+    
+    [[maybe_unused]]
+    void push(const T& t, std::size_t idx) {
+        idx += data.size() / 2;
+        data[idx] = t;
         idx /= 2;
-        while (idx >= 1) {
+        
+        for (; idx; idx /= 2) {
             data[idx] = F()(data[2 * idx], data[2 * idx + 1]);
-            idx /= 2;
         }
     }
     
-    T reduce(int l, int r) const {
-        const int n = data.size() / 2;
+    [[nodiscard]]
+    [[maybe_unused]]
+    auto reduce(std::size_t l, std::size_t r) const {
+        auto n = data.size() / 2;
         l += n;
         r += n;
         
-        T ret = DEFAULT;
-        while (l <= r) {
-            if (l % 2 == 1) {
-                ret = F()(ret, data[l++]);
-            }
-            if (r % 2 == 0) {
-                ret = F()(ret, data[r--]);
-            }
-            l /= 2;
-            r /= 2;
+        auto ret = identity;
+        for (; l <= r; l /= 2, r /= 2) {
+            if (l % 2 == 1) {ret = F()(data[l++], ret);}
+            if (r % 2 == 0) {ret = F()(ret, data[r--]);}
         }
         
         return ret;

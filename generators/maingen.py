@@ -5,10 +5,9 @@ from treegen import tree_gen, path_gen, star_gen
 
 
 def main_print():
-    n = 100
-    print(n, 2)
-    for i in range(n):
-        print(r.randint(-100, 100), r.randint(-100, 100), r.randint(-100, 100))
+    print(1000)
+    for _ in range(1000):
+        print(2**58, end=' ')
 
 
 if __name__ == '__main__':

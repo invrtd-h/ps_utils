@@ -13,6 +13,14 @@ struct SegTree {
     std::vector<T> data;
     constexpr static int mem_num = 1;
     
+    SegTree() = default;
+    
+    explicit SegTree(std::size_t size) noexcept {
+        std::size_t n = 1 << std::bit_width(size);
+        data = std::vector(n * 2, identity);
+    }
+    
+    [[maybe_unused]]
     static auto from(const std::vector<T>& v) -> SegTree {
         auto ret = SegTree();
         std::size_t n = 1 << std::bit_width(v.size());
@@ -31,6 +39,7 @@ struct SegTree {
         return ret;
     }
     
+    [[maybe_unused]]
     void push(const T& t, std::size_t idx) {
         idx += data.size() / 2;
         data[idx] = t;
@@ -42,6 +51,7 @@ struct SegTree {
     }
     
     [[nodiscard]]
+    [[maybe_unused]]
     auto reduce(std::size_t l, std::size_t r) const {
         auto n = data.size() / 2;
         l += n;
