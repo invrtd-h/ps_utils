@@ -1,6 +1,8 @@
 #ifndef PS_UTILS_KMPAUT_H
 #define PS_UTILS_KMPAUT_H
 
+#include <bits/stdc++.h>
+
 template<typename T = std::string>
 struct KMPAut {
     T s;
